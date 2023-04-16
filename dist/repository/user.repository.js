@@ -45,23 +45,35 @@ class UserRepository {
             try {
                 const username = user.username.toLowerCase();
                 const password = user.password;
-                return user_model_1.default.findOne({
-                    where: {
-                        [Op.or]: [{ username: username }]
+                let machedUser = yield user_model_1.default.findOne({ where: { username: username } });
+                console.log('macheduser: ', machedUser);
+                if (machedUser) {
+                    let isMached = yield encrypt_1.Encrypt.comparePassword(password, machedUser.password);
+                    if (isMached) {
+                        delete machedUser.dataValues.password;
+                        machedUser.dataValues.token = this.getToken(machedUser);
+                        return machedUser;
                     }
-                }).then((userdb) => {
-                    if (!userdb)
-                        return null;
-                    return encrypt_1.Encrypt.comparePassword(password, userdb.password).then((isMatch) => {
-                        if (isMatch) {
-                            delete userdb.dataValues.password;
-                            userdb.dataValues.token = this.getToken(userdb);
-                        }
-                        return userdb;
-                    }, (error) => {
-                        throw error;
-                    });
-                });
+                }
+                return null;
+                //throw new Error('Incorrect Username or Password');
+                // return User.findOne({
+                //     where: {
+                //         [Op.or]: [{username: username}]
+                //     }
+                // }).then((userdb: any) =>{
+                //     if(!userdb) return null;
+                //     return Encrypt.comparePassword(password, userdb.password).then((isMatch)=>{
+                //         if(isMatch){
+                //             delete userdb.dataValues.password;
+                //             userdb.dataValues.token = this.getToken(userdb);
+                //         }
+                //         return userdb;
+                //     },
+                //     (error) =>{
+                //         throw error;
+                //     });
+                // })
             }
             catch (error) {
                 throw error;
@@ -87,6 +99,10 @@ class UserRepository {
     createUser(user) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
+                //check user existing 
+                let userdb = yield user_model_1.default.findOne({ where: { username: user.username } });
+                if (userdb)
+                    throw new Error("User already exist.");
                 user.password = yield encrypt_1.Encrypt.cryptPassword(user.password);
                 let result = yield user_model_1.default.create(user);
                 delete result.dataValues.password;

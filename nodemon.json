@@ -1,0 +1,6 @@
+{
+    "watch": ["src", "views"],
+    "ext": "ts,json,pug",
+    "exec": "ts-node src/index.ts"
+  }
+  

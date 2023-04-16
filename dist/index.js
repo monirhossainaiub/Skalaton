@@ -10,8 +10,15 @@ const helmet = require('helmet');
 const xss = require('xss-clean');
 const hpp = require('hpp');
 const route_1 = __importDefault(require("./routes/route"));
+const path = require('path');
+const cookieParser = require('cookie-parser');
+const cors = require('cors');
 const db_manager_1 = __importDefault(require("./manager/db.manager"));
 const app = (0, express_1.default)();
+app.set('view engine', 'pug');
+app.set('views', path.join(__dirname, 'views'));
+// Serving static files
+app.use(express_1.default.static(path.join(__dirname, 'public')));
 // 1) GLOBAL MIDDLEWARES
 // Set security HTTP headers
 app.use(helmet());
@@ -26,6 +33,21 @@ app.use('/api', limiter);
 app.use(express_1.default.json({ limit: '10kb' }));
 // Data sanitization against XSS // like html tag and javascript <><>
 app.use(xss());
+const corsOptions = {
+    origin: "http://localhost:4200",
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE"
+};
+app.use(cors(corsOptions));
+const optionsJson = {
+    limit: '100mb'
+};
+const optionsUrlencoded = {
+    limit: '100mb',
+    extends: true
+};
+app.use(express_1.default.json(optionsJson));
+app.use(express_1.default.urlencoded(optionsUrlencoded));
+app.use(cookieParser());
 // Prevent parameter pollution 
 app.use(hpp());
 // app.use(

@@ -13,7 +13,7 @@ class AuthService {
         return this.authService;
     }
 
-    public async signInUser(user: IUser): Promise<IUser> {
+    public async signInUser(user: IUser): Promise<IUser | any> {
         try {
             let result = await this.userRepository.getUser(user);
             console.log('service user', result)

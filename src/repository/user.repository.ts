@@ -28,27 +28,40 @@ class UserRepository{
         return users;
     }
 
-    public async getUser(user: IUser): Promise<IUser>{
+    public async getUser(user: IUser): Promise<IUser | any>{
         try {
             const username = user.username.toLowerCase();
             const password = user.password;
-            return User.findOne({
-                where: {
-                    [Op.or]: [{username: username}]
+            let machedUser = await User.findOne({where: {username: username}});
+            console.log('macheduser: ', machedUser);
+            if(machedUser){
+                let isMached = await Encrypt.comparePassword(password, machedUser.password);
+                if(isMached){
+                    delete machedUser.dataValues.password;
+                    machedUser.dataValues.token = this.getToken(machedUser);
+                    return machedUser;
                 }
-            }).then((userdb: any) =>{
-                if(!userdb) return null;
-                return Encrypt.comparePassword(password, userdb.password).then((isMatch)=>{
-                    if(isMatch){
-                        delete userdb.dataValues.password;
-                        userdb.dataValues.token = this.getToken(userdb);
-                    }
-                    return userdb;
-                },
-                (error) =>{
-                    throw error;
-                });
-            })
+            }
+           
+            return null;
+            //throw new Error('Incorrect Username or Password');
+            // return User.findOne({
+            //     where: {
+            //         [Op.or]: [{username: username}]
+            //     }
+            // }).then((userdb: any) =>{
+            //     if(!userdb) return null;
+            //     return Encrypt.comparePassword(password, userdb.password).then((isMatch)=>{
+            //         if(isMatch){
+            //             delete userdb.dataValues.password;
+            //             userdb.dataValues.token = this.getToken(userdb);
+            //         }
+            //         return userdb;
+            //     },
+            //     (error) =>{
+            //         throw error;
+            //     });
+            // })
         } catch (error) {
             throw error;
         }
@@ -71,6 +84,9 @@ class UserRepository{
     
     public async createUser(user: IUser): Promise<IUser>{
         try {
+            //check user existing 
+            let userdb = await User.findOne({where: {username: user.username}});
+            if(userdb) throw new Error( "User already exist.");
             user.password = await Encrypt.cryptPassword(user.password);
             let result = await User.create(user);
             delete result.dataValues.password;

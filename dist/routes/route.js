@@ -4,31 +4,22 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const auth_route_1 = __importDefault(require("./auth.route"));
+const view_route_1 = __importDefault(require("./view.route"));
 const test_route_1 = __importDefault(require("./test.route"));
-const express = require('express');
-const cookieParser = require('cookie-parser');
-const cors = require('cors');
 const BASE_URL = process.env.BASE_URL;
 const routes = ({ app }) => {
-    const corsOptions = {
-        origin: "http://localhost:4200",
-        methods: "GET,HEAD,PUT,PATCH,POST,DELETE"
-    };
-    app.use(cors(corsOptions));
-    const optionsJson = {
-        limit: '100mb'
-    };
-    const optionsUrlencoded = {
-        limit: '100mb',
-        extends: true
-    };
-    app.use(express.json(optionsJson));
-    app.use(express.urlencoded(optionsUrlencoded));
-    app.use(cookieParser());
+    // app.set('view engine', 'pug');
+    // app.set('views', path.join(__dirname, 'views'));
+    app.get('/set-cookie', (req, res) => {
+        console.log('cookie is working');
+        res.cookie('myCookie', 'Hello World!', { maxAge: 900000, httpOnly: true });
+        res.send('Cookie has been set');
+    });
     app.get("/", (requst, response) => {
         response.send("Hello typescript with node.js");
     });
     //all router will be registered here
+    app.use('/user', view_route_1.default);
     app.use(BASE_URL + '/users', auth_route_1.default);
     app.use(BASE_URL + '/tests', test_route_1.default);
     //get invalid request 

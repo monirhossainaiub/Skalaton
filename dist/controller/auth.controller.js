@@ -17,24 +17,62 @@ const user_model_1 = __importDefault(require("../model/user.model"));
 const sendEmail = require('../utils/email');
 var AuthController;
 (function (AuthController) {
+    const createSendToken = (user, statusCode, req, res) => {
+        const expiresIn = parseInt(process.env.JWT_COOKIE_EXPIRES_IN || "0", 10) * 24 * 60 * 60 * 1000;
+        res.cookie('jwt', user.dataValues.token, {
+            expires: new Date(Date.now() + expiresIn),
+            httpOnly: true,
+            secure: req.secure || req.headers['x-forwarded-proto'] === 'http'
+        });
+        // Remove password from output
+        // user.password = undefined;
+        console.log(res);
+        res.status(statusCode).json({
+            status: 'success',
+            token: user.token,
+            data: {
+                user
+            }
+        });
+    };
+    AuthController.Home = (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+        console.log('Home controller');
+        try {
+            res.status(200).render('base', {
+                title: 'It is working ki moja ki moja'
+            });
+        }
+        catch (error) {
+            console.log(error);
+        }
+        //res.status(200).json({message:"Home controller"})
+    });
+    AuthController.getLoginForm = (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+        try {
+            res.status(200).render('login', {
+                title: 'Log into your account'
+            });
+        }
+        catch (error) {
+            console.log(error);
+        }
+    });
     AuthController.login = (request, response, next) => __awaiter(this, void 0, void 0, function* () {
         try {
             let user = new user_model_1.default();
             user.username = request.body.username.toString();
             user.password = request.body.password.toString();
-            // 1) Check if email and password exist
+            // 1) Check if email and password empty
             if (!user.username || !user.password) {
                 //return next(new AppError('Please provide email and password!', 400));
                 response.status(401).json({ error: 'Please provide email and password!' });
             }
             // 2) Check if user exists && password is correct
             const userResponse = yield auth_service_1.default.getInstance().signInUser(user);
-            // if (!userResponse || !(await Encrypt.comparePassword(user.password, userResponse.password))) {
-            //     //return next(new AppError('Incorrect email or password', 401));
-            //   }
             // 3) If everything ok, send token to client
             if (userResponse) {
-                response.status(200).json(userResponse);
+                //response.status(200).json(userResponse);
+                createSendToken(userResponse, 200, request, response);
             }
             else {
                 console.log('no user matched');
@@ -67,6 +105,7 @@ var AuthController;
         }
         catch (error) {
             console.log("err", error);
+            response.status(401).json({ message: error.message });
         }
     });
     //password functionality

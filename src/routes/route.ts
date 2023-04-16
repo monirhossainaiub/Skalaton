@@ -1,38 +1,30 @@
+
 import { RoutesInput } from "../type/type";
 import {Request, Response} from "express";
 import authRouter from './auth.route';
+import viewRouter from './view.route';
 import testRouter from './test.route';
-const express = require('express');
-const cookieParser = require('cookie-parser');
-const cors = require('cors');
+
 const BASE_URL = process.env.BASE_URL;
 
 const routes = ({ app }: RoutesInput) => {
-    const corsOptions = {
-        origin: "http://localhost:4200",
-        methods: "GET,HEAD,PUT,PATCH,POST,DELETE"
-    };
+
+    // app.set('view engine', 'pug');
+    // app.set('views', path.join(__dirname, 'views'));
+
     
-    app.use(cors(corsOptions));
-
-    const optionsJson ={
-        limit: '100mb'
-    };
-
-    const optionsUrlencoded ={
-        limit: '100mb',
-        extends: true
-    };
-
-    app.use(express.json(optionsJson));
-    app.use(express.urlencoded(optionsUrlencoded));
-    app.use(cookieParser());
-
+    app.get('/set-cookie', (req:Request, res:Response) => {
+        console.log('cookie is working')
+        res.cookie('myCookie', 'Hello World!', { maxAge: 900000, httpOnly: true });
+        res.send('Cookie has been set');
+      });
+      
     app.get("/", (requst: Request, response: Response) => {
         response.send("Hello typescript with node.js");
     });
 
     //all router will be registered here
+    app.use('/user', viewRouter);
     app.use(BASE_URL + '/users', authRouter);
     app.use(BASE_URL + '/tests', testRouter);
 

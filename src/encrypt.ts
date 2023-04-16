@@ -1,13 +1,18 @@
-import * as bcrypt from 'bcrypt';
+import bcrypt from 'bcrypt';
+
 export const Encrypt = {
-    
-    cryptPassword: (password: string) =>
-        bcrypt.genSalt(10)
-        .then((salt => bcrypt.hash(password, salt)))
-        .then(hash => hash),
-    
-        comparePassword: (password: string, hashPassword: string) =>
-            bcrypt.compare(password, hashPassword)
-            .then(resp => resp)
-            .catch(err => err)
+  cryptPassword: async (password: string): Promise<string> => {
+    const salt = await bcrypt.genSalt(10);
+    const hash = await bcrypt.hash(password, salt);
+    return hash;
+  },
+  
+  comparePassword: async (password: string, hashPassword: string): Promise<boolean> => {
+    try {
+        return await bcrypt.compare(password, hashPassword);
+    } catch (error) {
+      console.error(error);
+      return false;
     }
+  }
+};
